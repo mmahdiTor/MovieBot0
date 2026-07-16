@@ -1,0 +1,61 @@
+from pyrogram import Client, filters
+from pyrogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
+
+import config
+
+# وضعیت ادمین
+admin_state = {}
+
+
+# ===================== پنل =====================
+
+@Client.on_message(filters.command("admin"))
+async def admin_panel(client, message):
+
+    if message.from_user.id not in config.ADMINS:
+        return
+
+    keyboard = ReplyKeyboardMarkup(
+        [
+            ["📢 ارسال همگانی", "👥 تعداد کاربران"],
+            ["🚫 بن کاربر", "✅ آنبن کاربر"],
+            ["❌ بستن پنل"]
+        ],
+        resize_keyboard=True
+    )
+
+    await message.reply_text(
+        "⚙️ پنل مدیریت",
+        reply_markup=keyboard
+    )
+
+
+# ===================== بستن پنل =====================
+
+@Client.on_message(filters.regex("^❌ بستن پنل$"))
+async def close_panel(client, message):
+
+    if message.from_user.id not in config.ADMINS:
+        return
+
+    admin_state.pop(message.from_user.id, None)
+
+    await message.reply_text(
+        "✅ پنل بسته شد.",
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+
+# ===================== تعداد کاربران =====================
+
+@Client.on_message(filters.regex("^👥 تعداد کاربران$"))
+async def users_count(client, message):
+
+    if message.from_user.id not in config.ADMINS:
+        return
+
+    count = client.db.users_count()
+
+    await message.reply_text(
+        f"👥 تعداد کاربران ربات:\n\n{count}"
+    )
